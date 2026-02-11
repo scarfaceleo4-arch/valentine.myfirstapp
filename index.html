@@ -1,154 +1,204 @@
-<!doctype html>
-<html lang="en">
+<!DOCTYPE html>
+<html>
 <head>
-<meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>Tiny Shareable Card — Caesar's Snooze (fixed)</title>
-<link rel="manifest" href="manifest.json">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Love Card</title>
+
 <style>
-  :root{--bg:#120b16;--panel:#241d2a;--accent:#d32f2f;--muted:#bfb6c6;--text:#fff}
-  body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;background:linear-gradient(#120b16,#0b0710);font-family:system-ui,Arial;color:var(--text);padding:18px}
-  .box{width:100%;max-width:720px;background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));border-radius:12px;padding:18px;border:1px solid rgba(255,255,255,0.03)}
-  h1{margin:0 0 10px;font-size:20px}
-  .stage{background:#e9e9e9;border-radius:8px;padding:18px;display:flex;justify-content:center;align-items:center}
-  svg{width:420px;max-width:88vw;height:auto}
-  .controls{display:flex;gap:8px;align-items:center;margin-top:12px;flex-wrap:wrap}
-  input[type=text]{padding:10px;border-radius:8px;border:1px solid rgba(0,0,0,0.08);min-width:220px;font-size:14px}
-  button{padding:10px 12px;border-radius:10px;border:none;background:#d32f2f;color:white;font-weight:700;cursor:pointer}
-  .btn-muted{background:transparent;color:var(--muted);border:1px solid rgba(255,255,255,0.04)}
-  .small{font-size:13px;color:var(--muted);margin-top:8px}
-  @media(max-width:520px){ input[type=text]{min-width:140px} svg{width:320px} }
+body{
+  margin:0;
+  font-family:Arial;
+  text-align:center;
+  color:white;
+  background:linear-gradient(45deg,#1a001a,#330033,#660033);
+  overflow:hidden;
+}
+
+/* Glitter */
+body::after{
+  content:"";
+  position:fixed;
+  width:100%;
+  height:100%;
+  background:url("https://i.imgur.com/8QfQZ6F.png");
+  opacity:0.15;
+}
+
+/* Inputs */
+input{
+  padding:12px;
+  margin:6px;
+  border-radius:10px;
+  border:none;
+  font-size:16px;
+  width:80%;
+  max-width:250px;
+}
+
+/* HEART */
+.heart{
+  width:200px;
+  height:180px;
+  position:relative;
+  margin:40px auto;
+  cursor:pointer;
+}
+
+.half{
+  width:100px;
+  height:160px;
+  background:#ff1744;
+  position:absolute;
+  transition:1s;
+}
+
+.left{
+  left:0;
+  border-radius:100px 0 0 100px;
+}
+
+.right{
+  right:0;
+  border-radius:0 100px 100px 0;
+}
+
+.open .left{
+  transform:translateX(-120px) rotate(-20deg);
+}
+
+.open .right{
+  transform:translateX(120px) rotate(20deg);
+}
+
+/* Message */
+#message{
+  font-size:22px;
+  margin-top:10px;
+  opacity:0;
+  transition:1s;
+}
+
+/* Countdown */
+#count{
+  font-size:40px;
+  margin-top:10px;
+  color:#ff4d6d;
+}
+
+/* Floating hearts */
+.float{
+  position:absolute;
+  color:#ff4d6d;
+  animation:floatUp 6s linear infinite;
+}
+
+@keyframes floatUp{
+  from{transform:translateY(100vh);}
+  to{transform:translateY(-10vh);}
+}
+
+/* Confetti */
+.confetti{
+  position:fixed;
+  width:10px;
+  height:10px;
+  top:0;
+  animation:fall 4s linear forwards;
+}
+
+@keyframes fall{
+  to{
+    transform:translateY(100vh) rotate(720deg);
+    opacity:0;
+  }
+}
 </style>
 </head>
+
 <body>
-  <div class="box">
-    <h1>Tiny Shareable Card — fixed song (Caesar's Snooze)</h1>
 
-    <div class="stage" id="cardStage" aria-hidden="false">
-      <svg viewBox="0 0 420 320" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Valentine card">
-        <defs>
-          <path id="heartPath" d="M210 55 C185 10 100 20 100 100 C100 160 210 250 210 250 C210 250 320 160 320 100 C320 20 235 10 210 55 Z"/>
-          <clipPath id="leftClip"><rect x="0" y="0" width="210" height="320"/></clipPath>
-          <clipPath id="rightClip"><rect x="210" y="0" width="210" height="320"/></clipPath>
-        </defs>
+<h2>💘 Love Card</h2>
 
-        <g transform="translate(30,40)">
-          <rect id="msgRect" x="20" y="20" width="360" height="160" rx="24" ry="24" fill="#2f2f2f" opacity="0.95"/>
-          <text id="msgText" x="200" y="95" text-anchor="middle" fill="#fff" font-size="20" font-family="system-ui, Arial" font-weight="700">Happy Valentine's Day</text>
-        </g>
+<input id="girl" placeholder="Girl's name"><br>
+<input id="you" placeholder="Your name"><br>
 
-        <g transform="translate(30,40)">
-          <g id="leftHalf"><use href="#heartPath" clip-path="url(#leftClip)" fill="#d32f2f" /></g>
-          <g id="rightHalf"><use href="#heartPath" clip-path="url(#rightClip)" fill="#333333" /></g>
-        </g>
-      </svg>
-    </div>
+<p>Tap the heart 👇</p>
 
-    <div class="controls">
-      <input id="messageInput" type="text" placeholder="Type message (e.g. Love, John)" aria-label="Message input"/>
-      <button id="openBtn" class="btn-muted">Open Card</button>
-      <button id="playBtn">Play</button>
-      <button id="shareBtn" class="btn-muted">Share</button>
-    </div>
+<div class="heart" id="heart" onclick="startLove()">
+  <div class="half left"></div>
+  <div class="half right"></div>
+</div>
 
-    <div id="linkRow" style="display:none;margin-top:10px;gap:8px;align-items:center;flex-wrap:wrap;">
-      <input id="shareLink" style="padding:8px;border-radius:8px;border:1px solid rgba(0,0,0,0.06);width:72%" readonly />
-      <button id="copyBtn" class="btn-muted">Copy</button>
-    </div>
+<div id="count"></div>
+<div id="message"></div>
 
-    <div class="small">
-      Put the Caesar's Snooze MP3 at <code>/assets/caesar-snooze.mp3</code> (same folder included in ZIP) or set a public URL in the <code>AUDIO_URL</code> variable inside this file.
-    </div>
-  </div>
+<audio id="song" src="assets/caesar-snooze.m4a"></audio>
 
 <script>
-/* CONFIG: local default filename (change if desired) */
-const AUDIO_URL = 'assets/caesar-snooze.m4a'; // <- put your MP3 here (in assets folder) or replace with a public URL
+function startLove(){
+  let girl=document.getElementById("girl").value.trim();
+  let you=document.getElementById("you").value.trim();
 
-const messageInput = document.getElementById('messageInput');
-const msgText = document.getElementById('msgText');
-const openBtn = document.getElementById('openBtn');
-const playBtn = document.getElementById('playBtn');
-const shareBtn = document.getElementById('shareBtn');
-const leftHalf = document.getElementById('leftHalf');
-const rightHalf = document.getElementById('rightHalf');
-const linkRow = document.getElementById('linkRow');
-const shareLink = document.getElementById('shareLink');
-const copyBtn = document.getElementById('copyBtn');
-
-const audio = new Audio();
-audio.src = AUDIO_URL;
-audio.loop = true;
-audio.volume = 0.8;
-
-messageInput.addEventListener('input', () => {
-  const v = messageInput.value.trim();
-  msgText.textContent = v || "Happy Valentine's Day";
-});
-
-let open = false;
-openBtn.addEventListener('click', () => {
-  open = !open;
-  if (open) {
-    leftHalf.style.transform = 'translateX(-110px) rotate(-8deg)';
-    rightHalf.style.transform = 'translateX(110px) rotate(8deg)';
-    openBtn.textContent = 'Close Card';
-  } else {
-    leftHalf.style.transform = '';
-    rightHalf.style.transform = '';
-    openBtn.textContent = 'Open Card';
-  }
-});
-
-let playing = false;
-playBtn.addEventListener('click', async () => {
-  if (!AUDIO_URL || AUDIO_URL.includes('REPLACE_WITH')) {
-    alert("Please add your Caesar's Snooze MP3 into /assets/caesar-snooze.mp3 or set AUDIO_URL to a public MP3 URL.");
+  if(!girl||!you){
+    alert("Enter both names 😊");
     return;
   }
-  if (!playing) {
-    try { await audio.play(); } catch(e){ console.warn('Autoplay prevented', e); }
-  } else {
-    audio.pause();
-  }
-});
-audio.addEventListener('play', ()=>{ playing=true; playBtn.textContent='Pause'; });
-audio.addEventListener('pause', ()=>{ playing=false; playBtn.textContent='Play'; });
 
-function buildShareUrl() {
-  const url = new URL(location.href);
-  url.search = '';
-  if (messageInput.value.trim()) url.searchParams.set('m', messageInput.value.trim());
-  return url.toString();
+  let c=3;
+  document.getElementById("count").innerHTML=c;
+
+  let timer=setInterval(()=>{
+    c--;
+    document.getElementById("count").innerHTML=c>0?c:"❤️";
+
+    if(c<=0){
+      clearInterval(timer);
+      openHeart(girl,you);
+    }
+  },1000);
 }
 
-shareBtn.addEventListener('click', async () => {
-  const url = buildShareUrl();
-  if (navigator.share) {
-    try { await navigator.share({ title: "A card for you", text: "Open this", url }); } catch(e){ console.warn('Share failed', e); }
-  } else {
-    shareLink.value = url;
-    linkRow.style.display = 'flex';
-    try { await navigator.clipboard.writeText(url); copyBtn.textContent='Copied!'; setTimeout(()=>copyBtn.textContent='Copy',1400); } catch(e){}
-  }
-});
+function openHeart(girl,you){
+  document.getElementById("count").innerHTML="";
+  document.getElementById("heart").classList.add("open");
 
-copyBtn.addEventListener('click', async () => {
-  try { await navigator.clipboard.writeText(shareLink.value); copyBtn.textContent='Copied!'; setTimeout(()=>copyBtn.textContent='Copy',1400); } catch(e){ alert('Copy failed, select and copy manually.'); }
+  let msg="Happy Valentine's Day "+girl+" ❤️<br>Love, "+you;
+  let m=document.getElementById("message");
+  m.innerHTML=msg;
+  m.style.opacity=1;
+
+  document.getElementById("song").play();
+
+  startHearts();
+  confetti();
 }
 
-);
+/* Floating hearts */
+function startHearts(){
+  setInterval(()=>{
+    let h=document.createElement("div");
+    h.innerHTML="❤";
+    h.className="float";
+    h.style.left=Math.random()*100+"vw";
+    h.style.fontSize=(20+Math.random()*30)+"px";
+    document.body.appendChild(h);
+    setTimeout(()=>h.remove(),6000);
+  },300);
+}
 
-window.addEventListener('DOMContentLoaded', () => {
-  const params = new URLSearchParams(location.search);
-  const m = params.get('m');
-  if (m) { messageInput.value = m; msgText.textContent = m; }
-});
-
-// register service worker if available
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('service-worker.js').catch(()=>{/* no-op */});
+/* Confetti explosion */
+function confetti(){
+  for(let i=0;i<120;i++){
+    let c=document.createElement("div");
+    c.className="confetti";
+    c.style.left=Math.random()*100+"vw";
+    c.style.background=
+      `hsl(${Math.random()*360},100%,50%)`;
+    document.body.appendChild(c);
+    setTimeout(()=>c.remove(),4000);
+  }
 }
 </script>
+
 </body>
 </html>
