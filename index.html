@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Love Card</title>
+<title>Love Card GOD MODE</title>
 
 <style>
 body{
@@ -14,189 +14,283 @@ body{
   overflow:hidden;
 }
 
-/* Glitter */
-body::after{
-  content:"";
-  position:fixed;
-  width:100%;
-  height:100%;
-  background:url("https://i.imgur.com/8QfQZ6F.png");
-  opacity:0.15;
-}
+#setup{padding:20px;}
 
-/* Inputs */
-input{
+input,textarea{
   padding:12px;
   margin:6px;
   border-radius:10px;
   border:none;
   font-size:16px;
   width:80%;
-  max-width:250px;
+  max-width:280px;
+}
+
+button{
+  padding:12px 20px;
+  border:none;
+  border-radius:10px;
+  font-size:16px;
+  cursor:pointer;
+  background:#ff1744;
+  color:white;
 }
 
 /* HEART */
+.heart-wrap{margin:40px auto;cursor:pointer;}
 .heart{
-  width:200px;
-  height:180px;
-  position:relative;
-  margin:40px auto;
-  cursor:pointer;
-}
-
-.half{
-  width:100px;
-  height:160px;
+  width:100px;height:100px;
   background:#ff1744;
-  position:absolute;
+  transform:rotate(-45deg);
+  margin:auto;position:relative;top:40px;
   transition:1s;
 }
-
-.left{
-  left:0;
-  border-radius:100px 0 0 100px;
+.heart:before,.heart:after{
+  content:"";position:absolute;
+  width:100px;height:100px;
+  background:#ff1744;border-radius:50%;
 }
+.heart:before{top:-50px;}
+.heart:after{left:50px;}
 
-.right{
-  right:0;
-  border-radius:0 100px 100px 0;
-}
-
-.open .left{
-  transform:translateX(-120px) rotate(-20deg);
-}
-
-.open .right{
-  transform:translateX(120px) rotate(20deg);
-}
-
-/* Message */
-#message{
-  font-size:22px;
-  margin-top:10px;
+.open .heart{
+  transform:scale(2) rotateY(180deg);
   opacity:0;
-  transition:1s;
 }
 
-/* Countdown */
-#count{
-  font-size:40px;
-  margin-top:10px;
-  color:#ff4d6d;
+#message{opacity:0;transition:1s;font-size:22px;}
+#photo{
+  width:160px;height:160px;
+  object-fit:cover;border-radius:20px;
+  opacity:0;transition:1s;
 }
 
-/* Floating hearts */
+#count{font-size:40px;color:#ff4d6d;}
+
 .float{
-  position:absolute;
-  color:#ff4d6d;
+  position:fixed;
   animation:floatUp 6s linear infinite;
 }
-
 @keyframes floatUp{
   from{transform:translateY(100vh);}
   to{transform:translateY(-10vh);}
 }
 
-/* Confetti */
-.confetti{
+canvas{
   position:fixed;
-  width:10px;
-  height:10px;
-  top:0;
-  animation:fall 4s linear forwards;
-}
-
-@keyframes fall{
-  to{
-    transform:translateY(100vh) rotate(720deg);
-    opacity:0;
-  }
+  top:0;left:0;
+  pointer-events:none;
 }
 </style>
 </head>
 
 <body>
 
-<h2>💘 Love Card</h2>
+<div id="setup">
+<h2>Create Love Card 💘</h2>
+<input id="sender" placeholder="Your name"><br>
+<input id="to" placeholder="Recipient name"><br>
+<textarea id="msg" placeholder="Message"></textarea><br>
+<input id="pass" placeholder="Passcode optional"><br>
+<input type="file" id="img"><br>
+<button onclick="generateLink()">Generate Share Link</button>
+<p id="link"></p>
+</div>
 
-<input id="girl" placeholder="Girl's name"><br>
-<input id="you" placeholder="Your name"><br>
+<div id="card" style="display:none">
+<h2>💘 A Love Card For You</h2>
+<input id="receiverName" placeholder="Your name"><br>
+<input id="receiverPass" placeholder="Passcode"><br>
 
 <p>Tap the heart 👇</p>
 
-<div class="heart" id="heart" onclick="startLove()">
-  <div class="half left"></div>
-  <div class="half right"></div>
+<div class="heart-wrap" id="heartWrap" onclick="startLove()">
+<div class="heart"></div>
 </div>
 
 <div id="count"></div>
+<img id="photo">
 <div id="message"></div>
+</div>
 
-<audio id="song" src="assets/caesar-snooze.m4a"></audio>
+<canvas id="fx"></canvas>
 
 <script>
-function startLove(){
-  let girl=document.getElementById("girl").value.trim();
-  let you=document.getElementById("you").value.trim();
+const $=id=>document.getElementById(id);
+const fx=$("fx"),ctx=fx.getContext("2d");
 
-  if(!girl||!you){
-    alert("Enter both names 😊");
-    return;
+function resize(){
+  fx.width=window.innerWidth;
+  fx.height=window.innerHeight;
+}
+resize();
+window.addEventListener("resize",resize);
+
+let data={};
+let opened=false;
+
+/* SAFE BASE64 */
+function safeEncode(str){
+  return btoa(encodeURIComponent(str))
+    .replace(/\+/g,'-')
+    .replace(/\//g,'_')
+    .replace(/=+$/,'');
+}
+
+function safeDecode(str){
+  str=str.replace(/-/g,'+').replace(/_/g,'/');
+  return decodeURIComponent(atob(str));
+}
+
+/* SHARE LINK */
+function generateLink(){
+  const file=$("img").files[0];
+  if(!file) return alert("Upload photo");
+
+  const r=new FileReader();
+  r.onload=()=>{
+    const payload={
+      s:$("sender").value.trim(),
+      t:$("to").value.trim(),
+      m:$("msg").value.trim(),
+      p:r.result,
+      x:$("pass").value.trim()
+    };
+
+    const encoded=safeEncode(JSON.stringify(payload));
+    const url=location.origin+location.pathname+"#"+encoded;
+
+    $("link").innerHTML=
+      `<a href="${url}">COPY & SHARE</a>`;
+  };
+  r.readAsDataURL(file);
+}
+
+/* LOAD FROM HASH */
+if(location.hash.length>1){
+  try{
+    $("setup").style.display="none";
+    $("card").style.display="block";
+
+    const decoded=JSON.parse(
+      safeDecode(location.hash.slice(1))
+    );
+    data=decoded;
+  }catch(e){
+    alert("Broken link");
   }
+}
 
-  let c=3;
-  document.getElementById("count").innerHTML=c;
+/* LOVE FLOW */
+function startLove(){
+  if(opened) return;
 
-  let timer=setInterval(()=>{
+  const name=$("receiverName").value.trim();
+  const pass=$("receiverPass").value.trim();
+
+  if(name.toLowerCase()!==data.t.toLowerCase())
+    return alert("Wrong name");
+
+  if(data.x && pass!==data.x)
+    return alert("Wrong passcode");
+
+  let c=5;
+  $("count").innerHTML=c;
+
+  const t=setInterval(()=>{
     c--;
-    document.getElementById("count").innerHTML=c>0?c:"❤️";
-
+    $("count").innerHTML=c;
     if(c<=0){
-      clearInterval(timer);
-      openHeart(girl,you);
+      clearInterval(t);
+      openHeart();
     }
   },1000);
 }
 
-function openHeart(girl,you){
-  document.getElementById("count").innerHTML="";
-  document.getElementById("heart").classList.add("open");
+function openHeart(){
+  opened=true;
 
-  let msg="Happy Valentine's Day "+girl+" ❤️<br>Love, "+you;
-  let m=document.getElementById("message");
-  m.innerHTML=msg;
-  m.style.opacity=1;
+  $("heartWrap").classList.add("open");
 
-  document.getElementById("song").play();
+  $("photo").src=data.p;
+  $("photo").style.opacity=1;
 
-  startHearts();
+  $("message").innerHTML=
+    `${data.m}<br><br>❤️ Love, ${data.s}`;
+  $("message").style.opacity=1;
+
+  fireworks();
   confetti();
+  floatingHearts();
 }
 
-/* Floating hearts */
-function startHearts(){
+/* PARTICLES */
+let particles=[];
+
+/* CONFETTI */
+function confetti(){
+  for(let i=0;i<150;i++){
+    particles.push({
+      x:Math.random()*fx.width,
+      y:-20,
+      vx:(Math.random()-0.5)*6,
+      vy:Math.random()*5+2,
+      size:6,
+      color:`hsl(${Math.random()*360},100%,50%)`
+    });
+  }
+}
+
+/* FIREWORKS */
+function fireworks(){
+  for(let i=0;i<5;i++){
+    const cx=Math.random()*fx.width;
+    const cy=Math.random()*fx.height/2;
+
+    for(let j=0;j<40;j++){
+      particles.push({
+        x:cx,y:cy,
+        vx:(Math.random()-0.5)*8,
+        vy:(Math.random()-0.5)*8,
+        size:4,
+        life:80,
+        color:`hsl(${Math.random()*360},100%,60%)`
+      });
+    }
+  }
+}
+
+/* ENGINE */
+function loop(){
+  ctx.clearRect(0,0,fx.width,fx.height);
+
+  particles.forEach(p=>{
+    p.x+=p.vx;
+    p.y+=p.vy;
+    p.vy+=0.05;
+
+    ctx.fillStyle=p.color;
+    ctx.fillRect(p.x,p.y,p.size,p.size);
+
+    if(p.life) p.life--;
+  });
+
+  particles=particles.filter(p=>p.y<fx.height+20 && p.life!==0);
+  requestAnimationFrame(loop);
+}
+loop();
+
+/* FLOAT HEARTS */
+function floatingHearts(){
   setInterval(()=>{
-    let h=document.createElement("div");
-    h.innerHTML="❤";
+    const h=document.createElement("div");
+    h.innerHTML="💖";
     h.className="float";
     h.style.left=Math.random()*100+"vw";
     h.style.fontSize=(20+Math.random()*30)+"px";
     document.body.appendChild(h);
     setTimeout(()=>h.remove(),6000);
-  },300);
-}
-
-/* Confetti explosion */
-function confetti(){
-  for(let i=0;i<120;i++){
-    let c=document.createElement("div");
-    c.className="confetti";
-    c.style.left=Math.random()*100+"vw";
-    c.style.background=
-      `hsl(${Math.random()*360},100%,50%)`;
-    document.body.appendChild(c);
-    setTimeout(()=>c.remove(),4000);
-  }
+  },400);
 }
 </script>
 
